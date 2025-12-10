@@ -1,7 +1,6 @@
 package com.princess.student_activity.service
 
-import com.princess.student_activity.dto.ActivityDTO
-import com.princess.student_activity.dto.PageDTO
+import com.princess.student_activity.dto.*
 import com.princess.student_activity.helpers.*
 import com.princess.student_activity.model.ActivityEntity
 import com.princess.student_activity.model.ActivityTypeEntity
@@ -15,6 +14,7 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.jpa.domain.Specification
 import org.springframework.stereotype.Service
+import java.time.LocalDate
 import java.util.*
 
 @Service
@@ -120,5 +120,42 @@ class ActivityService(
 
         log.debug("Deleting activity..")
         repository.deleteById(activityId)
+    }
+
+    fun dashboard(studentId: UUID): DashboardDTO {
+        log.debug("Fetching numerical summary..")
+        val totalCount = repository.countByStudentId(studentId)
+        val today = LocalDate.now().atStartOfDay()
+        val todayCount = repository.countByTimestampBetweenAndStudentId(
+            today,
+            today.plusDays(1),
+            studentId
+        )
+        val dailyAverage = repository.getDailyAverage(studentId)
+
+        log.debug("Getting activities per activity type..")
+        val countPerActivity = repository.countByActivityType(studentId).map { row ->
+            ActivityCount(
+                activity = row[0] as String,
+                count = (row[1] as Number).toLong()
+            )
+        }
+
+        log.debug("Getting activities per day..")
+        val countPerDay = repository.countByDay(studentId).map { row ->
+            DailyCount(
+                date = LocalDate.parse(row[0].toString()),
+                count = (row[1] as Number).toLong()
+            )
+        }
+
+        return DashboardDTO(
+            studentId,
+            totalCount,
+            todayCount,
+            dailyAverage,
+            countPerActivity,
+            countPerDay
+        )
     }
 }

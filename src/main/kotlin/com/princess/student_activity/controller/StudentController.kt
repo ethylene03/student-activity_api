@@ -1,12 +1,15 @@
 package com.princess.student_activity.controller
 
+import com.princess.student_activity.dto.DashboardDTO
 import com.princess.student_activity.dto.PageDTO
 import com.princess.student_activity.dto.StudentDTO
+import com.princess.student_activity.service.ActivityService
 import com.princess.student_activity.service.StudentService
 import jakarta.validation.Valid
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 import java.util.*
@@ -14,7 +17,7 @@ import java.util.*
 @Validated
 @RestController
 @RequestMapping("/students")
-class StudentController(private val service: StudentService) {
+class StudentController(private val service: StudentService, private val activityService: ActivityService) {
 
     private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -49,5 +52,12 @@ class StudentController(private val service: StudentService) {
     fun delete(@PathVariable("id") id: UUID) {
         log.info("Running DELETE /students/{id} method.")
         return service.delete(id).also { log.info("Student deleted.") }
+    }
+
+    @GetMapping("/summary")
+    fun dashboard(@AuthenticationPrincipal studentId: UUID): DashboardDTO {
+        log.info("Running GET /students/summary method.")
+
+        return activityService.dashboard(studentId).also { log.info("Summary details fetched.") }
     }
 }
