@@ -1,5 +1,6 @@
 package com.princess.student_activity.dto
 
+import jakarta.validation.constraints.Email
 import jakarta.validation.constraints.NotBlank
 import java.util.*
 
@@ -9,6 +10,7 @@ data class StudentDTO(
     val firstName: String,
     @field:NotBlank(message = "Email is required.")
     val lastName: String,
+    @field:Email(message = "Enter a valid email.")
     @field:NotBlank(message = "Email is required.")
     val email: String,
     val password: String? = null,
