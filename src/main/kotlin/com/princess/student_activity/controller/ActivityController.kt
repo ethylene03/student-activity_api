@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
+import java.time.LocalDate
 import java.util.*
 
 @Validated
@@ -29,10 +30,11 @@ class ActivityController(private val service: ActivityService) {
     fun findAll(
         @AuthenticationPrincipal studentId: UUID,
         pageable: Pageable,
-        @RequestParam(required = false) query: String?
+        @RequestParam(required = false) query: String?,
+        @RequestParam(required = false) date: LocalDate?
     ): PageDTO {
         log.info("Running GET /activities method.")
-        return service.findAll(studentId, pageable, query).also { log.info("Activities fetched.") }
+        return service.findAll(studentId, pageable, query, date).also { log.info("Activities fetched.") }
     }
 
     @GetMapping("/{id}")

@@ -46,12 +46,21 @@ class ActivityService(
             .let { repository.save(it) }.toActivityResponse()
     }
 
-    fun findAll(studentId: UUID, pageable: Pageable, query: String?): PageDTO {
+    fun findAll(studentId: UUID, pageable: Pageable, query: String?, date: LocalDate?): PageDTO {
         log.debug("Creating specification..")
-        val spec = Specification<ActivityEntity> { root, _, cb ->
+        var spec = Specification<ActivityEntity> { root, _, cb ->
             val studentJoin = root.join<ActivityEntity, StudentEntity>("student")
             cb.equal(studentJoin.get<UUID>("id"), studentId)
         }.and(buildSpecification(query))
+
+        if (date != null) {
+            val dateSpec = Specification<ActivityEntity> { root, _, cb ->
+                val startOfDay = date.atStartOfDay()
+                val endOfDay = date.plusDays(1).atStartOfDay()
+                cb.between(root.get("timestamp"), startOfDay, endOfDay)
+            }
+            spec = spec.and(dateSpec)
+        }
 
         log.debug("Creating custom sorting..")
         val customPageable = PageRequest.of(
