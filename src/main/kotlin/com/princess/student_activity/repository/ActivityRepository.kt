@@ -1,6 +1,5 @@
 package com.princess.student_activity.repository
 
-import com.princess.student_activity.dto.DailyCount
 import com.princess.student_activity.model.ActivityEntity
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor
@@ -40,13 +39,22 @@ interface ActivityRepository : JpaRepository<ActivityEntity, UUID>, JpaSpecifica
 
     @Query(
         value = """
+        WITH date_series AS (
+            SELECT generate_series(
+                (SELECT MIN(timestamp)::date FROM activities WHERE student_id = :studentId),
+                (SELECT MAX(timestamp)::date FROM activities WHERE student_id = :studentId),
+                interval '1 day'
+            ) AS day
+        )
         SELECT 
-            DATE(a.timestamp) AS day,
-            COUNT(*) AS count
-        FROM activities a
-        WHERE a.student_id = :studentId
-        GROUP BY DATE(a.timestamp)
-        ORDER BY DATE(a.timestamp)
+            ds.day,
+            COUNT(a.id) AS count
+        FROM date_series ds
+        LEFT JOIN activities a
+            ON a.student_id = :studentId
+            AND DATE(a.timestamp) = ds.day
+        GROUP BY ds.day
+        ORDER BY ds.day;
     """,
         nativeQuery = true
     )

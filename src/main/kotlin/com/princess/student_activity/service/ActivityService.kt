@@ -153,7 +153,7 @@ class ActivityService(
         log.debug("Getting activities per day..")
         val countPerDay = repository.countByDay(studentId).map { row ->
             DailyCount(
-                date = LocalDate.parse(row[0].toString()),
+                date = LocalDate.parse(row[0].toString().substring(0, 10)),
                 count = (row[1] as Number).toLong()
             )
         }
